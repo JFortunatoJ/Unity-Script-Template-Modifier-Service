@@ -17,9 +17,9 @@
 ## 🛠 Installation & Usage
 1. Build the project in **Release** mode.
 2. Open **Command Prompt as Administrator**.
-3. Install the service:
+3. Install the service and set to Auto-Start with Windows:
 ```sh
-    sc create UnityScriptTemplateModifierService binPath= "path\to\Unity-Script-Template-Modifier-Service.exe"
+    sc create UnityScriptTemplateModifierService binPath= "path\to\Unity-Script-Template-Modifier-Service.exe" start auto
 ```
 4. Start the service:
 ```sh
