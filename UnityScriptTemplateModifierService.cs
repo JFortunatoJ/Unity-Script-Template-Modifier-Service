@@ -28,13 +28,13 @@ namespace UnityScriptTemplateModifierService
             };
 
             _watcher.Created += OnNewUnityInstall;
-            WriteLog("Unity Monitor Service started.");
+            WriteLog("Unity Script Template Modifier Service started.");
         }
 
         protected override void OnStop()
         {
             _watcher?.Dispose();
-            WriteLog("Unity Monitor Service stopped.");
+            WriteLog("Unity Script Template Modifier Service stopped.");
         }
 
         private async void OnNewUnityInstall(object sender, FileSystemEventArgs e)
@@ -42,26 +42,48 @@ namespace UnityScriptTemplateModifierService
             string newUnityPath = e.FullPath;
             string scriptTemplatesPath = Path.Combine(newUnityPath, "Editor", "Data", "Resources", "ScriptTemplates");
 
-            if (Directory.Exists(scriptTemplatesPath))
+            bool success;
+            int remainingAttempts = 5;
+            do
             {
-                WriteLog($"New Unity version detected: {newUnityPath}");
-                await Task.Delay(5000); // Wait to ensure the files are available
-
-                var scriptTemplateFile = "81-C# Script-NewBehaviourScript.cs.txt";
-
-                if (int.TryParse(Path.GetFileName(newUnityPath).Split('.').First(), out int unityVersion))
+                remainingAttempts--;
+                success = Directory.Exists(scriptTemplatesPath);
+                if (success)
                 {
-                    scriptTemplateFile = unityVersion <= 2023 ? "81-C# Script-NewBehaviourScript.cs.txt" :
-                        "1-Scripting__MonoBehaviour Script-NewMonoBehaviourScript.cs.txt";
+                    WriteLog($"New Unity version detected: {newUnityPath}");
+                    await Task.Delay(5000); // Wait to ensure the files are available
+
+                    var scriptTemplateFile = "81-C# Script-NewBehaviourScript.cs.txt";
+
+                    if (int.TryParse(Path.GetFileName(newUnityPath).Split('.').First(), out int unityVersion))
+                    {
+                        scriptTemplateFile = unityVersion <= 2023 ? "81-C# Script-NewBehaviourScript.cs.txt" :
+                            "1-Scripting__MonoBehaviour Script-NewMonoBehaviourScript.cs.txt";
+                    }
+
+                    string scriptFile = Path.Combine(scriptTemplatesPath, scriptTemplateFile);
+
+                    success = File.Exists(scriptFile);
+                    if (success)
+                    {
+                        ModifyMonoBehaviourScriptTemplate(scriptFile);
+                    }
+                    else
+                    {
+                        WriteLog($"Error: File path [{scriptFile}] not found. Remaining Attempts: {remainingAttempts}. Trying again in 10 minutes...");
+                    }
+                }
+                else
+                {
+                    WriteLog($"Error: Templates path: [{scriptTemplatesPath}] not found. Remaining Attempts: {remainingAttempts}. Trying again in 10 minutes...");
                 }
 
-                string scriptFile = Path.Combine(scriptTemplatesPath, scriptTemplateFile);
-
-                if (File.Exists(scriptFile))
+                if (!success)
                 {
-                    ModifyMonoBehaviourScriptTemplate(scriptFile);
+                    await Task.Delay(600000);
                 }
-            }
+
+            } while (!success && remainingAttempts > 0);
         }
 
         private void ModifyMonoBehaviourScriptTemplate(string filePath)
