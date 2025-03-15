@@ -15,17 +15,18 @@
 4. **Updates the default C# script template**, adding a custom header and modifications.
 
 ## 🛠 Installation & Usage
-1. Build the project in **Release** mode.
-2. Open **Command Prompt as Administrator**.
-3. Install the service and set to Auto-Start with Windows:
+1. Set the value of the field `serviceFilesPath` to path where you want to save the base template files and logs in your computer.
+2. Build the project in **Release** mode.
+3. Open **Command Prompt as Administrator**.
+4. Install the service and set to Auto-Start with Windows:
 ```sh
     sc create UnityScriptTemplateModifierService binPath= "path\to\Unity-Script-Template-Modifier-Service.exe" start auto
 ```
-4. Start the service:
+5. Start the service:
 ```sh
     net start UnityScriptTemplateModifierService
 ```
-5. Check logs at C:\UnityScriptTemplateModifierService\service.log to verify modifications.
+6. Check logs at `service.log` to verify modifications.
 
 ## 🔄 Uninstalling
 ```sh

@@ -13,7 +13,7 @@ namespace UnityScriptTemplateModifierService
         /// </summary>
         private readonly string unityHubPath = @"D:\Program Files\Unity";
         /// <summary>
-        /// Path to service files
+        /// Path to service files. Change it to the path of your preference.
         /// </summary>
         private readonly string serviceFilesPath = @"E:\Program Files\UnityScriptTemplateModifierService";
 
@@ -39,6 +39,8 @@ namespace UnityScriptTemplateModifierService
 
             _watcher.Created += OnNewUnityInstall;
             WriteLog("Unity Script Template Modifier Service started.");
+
+            CheckIfBaseMonoBehaviourTemplateExists("BaseMonoBehaviour");
         }
 
         protected override void OnStop()
@@ -95,6 +97,7 @@ namespace UnityScriptTemplateModifierService
 
                 if (!success)
                 {
+                    //Wait 10 minutes before trying again
                     await Task.Delay(600000);
                 }
 
@@ -107,28 +110,57 @@ namespace UnityScriptTemplateModifierService
         /// <param name="filePath"></param>
         private void ModifyMonoBehaviourScriptTemplate(string filePath)
         {
-            File.WriteAllText(filePath, GetBaseMonoBehaviourTemplateContent("BaseMonoBehaviour.txt"));
+            File.WriteAllText(filePath, GetBaseMonoBehaviourTemplateContent("BaseMonoBehaviour"));
             WriteLog($"Modified script template: {filePath}");
         }
 
         /// <summary>
         /// Gets the content of the template file
         /// </summary>
-        /// <param name="filePath"></param>
+        /// <param name="fileName"></param>
         /// <returns></returns>
-        private string GetBaseMonoBehaviourTemplateContent(string filePath)
+        private string GetBaseMonoBehaviourTemplateContent(string fileName)
         {
-            string fullPath = Path.Combine(serviceFilesPath, "Templates", filePath);
+            string fullPath = Path.Combine(serviceFilesPath, "Templates", $"{fileName}.txt");
             if (File.Exists(fullPath))
             {
                 return File.ReadAllText(fullPath);
             }
             else
             {
-                WriteLog($"Error: File path [{fullPath}] not found.");
+                WriteLog($"Error: File path [{fullPath}] not found. Creating new template file...");
                 // Default template content
-                return "using UnityEngine;\r\n\r\n    #ROOTNAMESPACEBEGIN#\r\npublic class #SCRIPTNAME# : MonoBehaviour\r\n{\r\n    private void Start()\r\n    {\r\n        #NOTRIM#\r\n    }\r\n}\r\n#ROOTNAMESPACEEND#\r\n";
+                return CreateBaseMonoBehaviourTemplate(fileName);
             }
+        }
+
+        /// <summary>
+        /// Checks if the base MonoBehaviour template exists, if not, creates a new one
+        /// </summary>
+        /// <param name="fileName"></param>
+        private void CheckIfBaseMonoBehaviourTemplateExists(string fileName)
+        {
+            string fullPath = Path.Combine(serviceFilesPath, "Templates", $"{fileName}.txt");
+            if (!File.Exists(fullPath))
+            {
+                WriteLog($"Error: File path [{fullPath}] not found. Creating new template file...");
+                CreateBaseMonoBehaviourTemplate(fileName);
+            }
+        }
+
+        /// <summary>
+        /// Creates a base MonoBehaviour template
+        /// </summary>
+        /// <returns></returns>
+        private string CreateBaseMonoBehaviourTemplate(string fileName)
+        {
+            string directoryPath = Path.Combine(serviceFilesPath, "Templates");
+            Directory.CreateDirectory(directoryPath);
+
+            string content = BaseTemplates.BaseMonoBehaviourContent;
+            File.WriteAllText(Path.Combine(directoryPath, $"{fileName}.txt"), content);
+
+            return content;
         }
 
         /// <summary>
