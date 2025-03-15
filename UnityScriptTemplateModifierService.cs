@@ -8,9 +8,19 @@ namespace UnityScriptTemplateModifierService
 {
     public partial class UnityScriptTemplateModifierService : ServiceBase
     {
-        private FileSystemWatcher _watcher;
-        //Change to the Unity Editors path in your computer
+        /// <summary>
+        /// Path to Unity Hub installations
+        /// </summary>
         private readonly string unityHubPath = @"D:\Program Files\Unity";
+        /// <summary>
+        /// Path to service files
+        /// </summary>
+        private readonly string serviceFilesPath = @"E:\Program Files\UnityScriptTemplateModifierService";
+
+        /// <summary>
+        /// File system watcher to detect new Unity installations
+        /// </summary>
+        private FileSystemWatcher _watcher;
 
         public UnityScriptTemplateModifierService()
         {
@@ -37,6 +47,11 @@ namespace UnityScriptTemplateModifierService
             WriteLog("Unity Script Template Modifier Service stopped.");
         }
 
+        /// <summary>
+        /// Event handler for new Unity installations
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private async void OnNewUnityInstall(object sender, FileSystemEventArgs e)
         {
             string newUnityPath = e.FullPath;
@@ -86,16 +101,43 @@ namespace UnityScriptTemplateModifierService
             } while (!success && remainingAttempts > 0);
         }
 
+        /// <summary>
+        /// Modifies the MonoBehaviour script template
+        /// </summary>
+        /// <param name="filePath"></param>
         private void ModifyMonoBehaviourScriptTemplate(string filePath)
         {
-            string customContent = "using UnityEngine;\r\n\r\n    #ROOTNAMESPACEBEGIN#\r\npublic class #SCRIPTNAME# : MonoBehaviour\r\n{\r\n    private void Start()\r\n    {\r\n        #NOTRIM#\r\n    }\r\n}\r\n#ROOTNAMESPACEEND#\r\n";
-            File.WriteAllText(filePath, customContent);
+            File.WriteAllText(filePath, GetBaseMonoBehaviourTemplateContent("BaseMonoBehaviour.txt"));
             WriteLog($"Modified script template: {filePath}");
         }
 
+        /// <summary>
+        /// Gets the content of the template file
+        /// </summary>
+        /// <param name="filePath"></param>
+        /// <returns></returns>
+        private string GetBaseMonoBehaviourTemplateContent(string filePath)
+        {
+            string fullPath = Path.Combine(serviceFilesPath, "Templates", filePath);
+            if (File.Exists(fullPath))
+            {
+                return File.ReadAllText(fullPath);
+            }
+            else
+            {
+                WriteLog($"Error: File path [{fullPath}] not found.");
+                // Default template content
+                return "using UnityEngine;\r\n\r\n    #ROOTNAMESPACEBEGIN#\r\npublic class #SCRIPTNAME# : MonoBehaviour\r\n{\r\n    private void Start()\r\n    {\r\n        #NOTRIM#\r\n    }\r\n}\r\n#ROOTNAMESPACEEND#\r\n";
+            }
+        }
+
+        /// <summary>
+        /// Writes a message to the log file
+        /// </summary>
+        /// <param name="message"></param>
         private void WriteLog(string message)
         {
-            string logFile = @"C:\UnityScriptTemplateModifierService\service.log";
+            string logFile = Path.Combine(serviceFilesPath, "service.log");
             Directory.CreateDirectory(Path.GetDirectoryName(logFile));
             File.AppendAllText(logFile, $"{DateTime.Now}: {message}\n");
         }
