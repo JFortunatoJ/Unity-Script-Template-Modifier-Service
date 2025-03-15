@@ -15,7 +15,7 @@
 4. **Updates the default C# script template**, adding a custom header and modifications.
 
 ## 🛠 Installation & Usage
-1. Set the value of the field `serviceFilesPath` to path where you want to save the base template files and logs in your computer.
+1. Set the value of the field `serviceFilesPath` to the path where you want to save the base template files and logs in your computer.
 2. Build the project in **Release** mode.
 3. Open **Command Prompt as Administrator**.
 4. Install the service and set to Auto-Start with Windows:
